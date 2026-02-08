@@ -57,12 +57,12 @@ st.markdown("""
 with st.sidebar:
     st.header("⚙️ Configuración")
     
-    # Input para API Key
-    api_key = st.text_input(
-        "API Key de Anthropic",
-        type="password",
-        help="Ingresa tu API key de console.anthropic.com"
-    )
+    # Obtener API Key desde secrets
+try:
+    api_key = st.secrets["ANTHROPIC_API_KEY"]
+except:
+    st.error("⚠️ No se encontró la API Key en los secrets. Configúrala en Settings > Secrets")
+    st.stop()
     
     st.markdown("---")
     
