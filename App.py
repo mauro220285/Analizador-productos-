@@ -10,7 +10,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# CSS personalizado
+# CSS personalizado (sin cambios)
 st.markdown("""
 <style>
     .main-header {
@@ -60,45 +60,41 @@ except:
     st.error("⚠️ No se encontró la API Key en los secrets. Configúrala en Settings > Secrets")
     st.stop()
 
-# Función para investigar mercado
+# Función para investigar mercado (OPTIMIZADA)
 def investigar_mercado(datos_formulario, api_key):
-    """Investiga el mercado usando Claude con web search"""
+    """Investiga el mercado usando Claude con web search - VERSIÓN OPTIMIZADA"""
     try:
         client = anthropic.Anthropic(api_key=api_key)
         
-        # Construir el contexto del prompt con los datos del formulario
-        contexto = f"""
-TIPO: {datos_formulario['tipo']}
-CATEGORÍA: {datos_formulario['categoria']}
-PROBLEMA QUE RESUELVE: {datos_formulario['problema']}
-PÚBLICO OBJETIVO: {datos_formulario['publico']}
-PAÍS: {datos_formulario['pais']}
-"""
+        # Contexto ultra-compacto
+        contexto = f"{datos_formulario['tipo']}: {datos_formulario['categoria']} | Resuelve: {datos_formulario['problema']} | Target: {datos_formulario['publico']} | País: {datos_formulario['pais']}"
         
-        # Agregar datos opcionales si existen
+        # Agregar solo si existe
+        extras = []
         if datos_formulario.get('dedicacion'):
-            contexto += f"DEDICACIÓN ACTUAL: {datos_formulario['dedicacion']}\n"
+            extras.append(f"Dedicación: {datos_formulario['dedicacion']}")
         if datos_formulario.get('titulo'):
-            contexto += f"ESPECIALIDAD/TÍTULO: {datos_formulario['titulo']}\n"
+            extras.append(f"Título: {datos_formulario['titulo']}")
         if datos_formulario.get('talento'):
-            contexto += f"TALENTO/FORTALEZA: {datos_formulario['talento']}\n"
+            extras.append(f"Talento: {datos_formulario['talento']}")
         
-        prompt = f"""Necesito que investigues el mercado para esta idea de producto/servicio digital:
+        if extras:
+            contexto += " | " + " | ".join(extras)
+        
+        # Prompt ultra-conciso (reducido 60%)
+        prompt = f"""Investiga este producto digital: {contexto}
 
-{contexto}
+Busca en web y responde CONCISO:
+1. 2 productos similares (nombre, precio exacto)
+2. Demanda estimada (volumen búsquedas/mes)
+3. Rango de precios del mercado
+4. 1 oportunidad/gap identificado
 
-Investiga en la web y proporciona información CONCRETA sobre:
-1. 3-5 productos/servicios similares que existen (nombres, precios, características)
-2. Demanda del mercado (volumen de búsquedas, tendencias)
-3. Competidores principales
-4. Rangos de precios específicos
-5. Gaps en el mercado (oportunidades)
-
-Usa búsqueda web para datos reales. Sé específico con números y nombres."""
+Solo datos concretos, sin explicaciones."""
 
         response = client.messages.create(
             model="claude-sonnet-4-20250514",
-            max_tokens=2500,
+            max_tokens=1200,  # ✂️ REDUCIDO de 2500
             tools=[{
                 "type": "web_search_20250305",
                 "name": "web_search"
@@ -120,152 +116,98 @@ Usa búsqueda web para datos reales. Sé específico con números y nombres."""
     except Exception as e:
         return None, str(e)
 
-# Función para generar informe
+# Función para generar informe (OPTIMIZADA)
 def generar_informe(datos_formulario, datos_investigacion, api_key):
-    """Genera el informe formateado"""
+    """Genera el informe formateado - VERSIÓN OPTIMIZADA"""
     try:
         client = anthropic.Anthropic(api_key=api_key)
         
-        # Construir contexto del formulario
-        contexto = f"""
-TIPO: {datos_formulario['tipo']}
-CATEGORÍA: {datos_formulario['categoria']}
-PROBLEMA QUE RESUELVE: {datos_formulario['problema']}
-PÚBLICO OBJETIVO: {datos_formulario['publico']}
-PAÍS: {datos_formulario['pais']}
-"""
+        # Contexto compacto
+        contexto = f"{datos_formulario['tipo']}: {datos_formulario['categoria']} | {datos_formulario['problema']} | Target: {datos_formulario['publico']} | {datos_formulario['pais']}"
         
         if datos_formulario.get('dedicacion'):
-            contexto += f"DEDICACIÓN ACTUAL: {datos_formulario['dedicacion']}\n"
+            contexto += f" | {datos_formulario['dedicacion']}"
         if datos_formulario.get('titulo'):
-            contexto += f"ESPECIALIDAD/TÍTULO: {datos_formulario['titulo']}\n"
+            contexto += f" | {datos_formulario['titulo']}"
         if datos_formulario.get('talento'):
-            contexto += f"TALENTO/FORTALEZA: {datos_formulario['talento']}\n"
+            contexto += f" | {datos_formulario['talento']}"
         
-        prompt = f"""Basándote en esta investigación de mercado, genera un informe profesional siguiendo EXACTAMENTE este formato:
+        # Prompt simplificado (reducido 50%)
+        prompt = f"""Genera informe siguiendo EXACTO este formato:
 
-DATOS DEL PRODUCTO/SERVICIO:
-{contexto}
+DATOS: {contexto}
 
-INVESTIGACIÓN REALIZADA:
-{datos_investigacion}
-
----
-
-Genera el informe siguiendo EXACTAMENTE esta estructura:
+INVESTIGACIÓN: {datos_investigacion}
 
 ═══════════════════════════════════════════════════════════════
                     🎯 TU PRODUCTO DIGITAL
 ═══════════════════════════════════════════════════════════════
 
-
 📦 PRODUCTO
 ───────────────────────────────────────────────────────────────
-
-[Nombre del producto pegadizo y descriptivo]
-
-Formato: [Tipo de producto digital]
-
+[Nombre pegadizo]
+Formato: [Tipo]
 
 💰 PRECIO
 ───────────────────────────────────────────────────────────────
+$[Precio ARG]
+Mercado: [Rango basado en investigación]
 
-$[Precio sugerido en pesos argentinos]
-
-Rango de mercado: [Basado en la investigación real]
-
-
-👥 QUIÉN LO COMPRA
+👥 CLIENTE IDEAL
 ───────────────────────────────────────────────────────────────
+[Descripción específica]
+Problema: [Dolor real]
+Deseo: [Objetivo]
 
-[Descripción específica del cliente ideal]
-
-Su problema: [El dolor real que tienen]
-Su deseo: [Lo que realmente quieren lograr]
-Por qué compra: [La razón emocional de compra]
-
-
-🎣 TU GANCHO DE VENTA
+🎣 PROPUESTA DE VALOR
 ───────────────────────────────────────────────────────────────
-
-"[Propuesta única de valor - una frase poderosa]"
-
-Versión corta: "[Slogan pegadizo]"
-
+"[Frase poderosa única]"
 
 📋 QUÉ INCLUYE
 ───────────────────────────────────────────────────────────────
+PRINCIPAL:
+✓ [Componente core]
 
-PRODUCTO PRINCIPAL:
-✓ [Componente principal con descripción]
-
-BONUS INCLUIDOS:
+BONUS:
 ✓ [Bonus 1]
 ✓ [Bonus 2]
 ✓ [Bonus 3]
-✓ [Bonus 4]
-✓ [Bonus 5]
 
+✅ POR QUÉ SE VENDERÁ
 ───────────────────────────────────────────────────────────────
-Valor total percibido: $[Precio alto]    →    Precio: $[Precio real]
+[Datos mercado: volumen búsquedas, estadísticas]
+- [Ventaja 1 con dato]
+- [Ventaja 2 con dato]
+- [Diferenciación única]
+
+🌊 OPORTUNIDAD
 ───────────────────────────────────────────────────────────────
+[Gap del mercado identificado]
 
+⚡ PLAN 72 HORAS
+═══════════════════════════════════════════════════════════════
+DÍA 1 - [FASE]
+□ [Tarea 1]
+□ [Tarea 2]
 
-✅ POR QUÉ SE VA A VENDER
-───────────────────────────────────────────────────────────────
+DÍA 2 - [FASE]
+□ [Tarea 1]
+□ [Tarea 2]
 
-[Datos concretos del mercado, estadísticas, números de búsquedas]
+DÍA 3 - [FASE]
+□ [Tarea 1]
+□ [Tarea 2]
 
-- [Punto 1 con datos específicos]
-- [Punto 2 con datos específicos]
-- [Punto 3 - ventaja competitiva única]
-
-
-🌊 NICHO AZUL
-───────────────────────────────────────────────────────────────
-
-[Explicación de por qué este es un océano azul - combinación única que no existe]
-
-
-🧠 POR QUÉ ESTE PRODUCTO PARA VOS
-───────────────────────────────────────────────────────────────
-
-[Conexión personal con la idea, considerando tu experiencia, título o talento mencionado]
-
-
-⚡ TU PLAN DE ACCIÓN (72 HORAS)
+🚀 PRIMER PASO (30 MIN)
+═══════════════════════════════════════════════════════════════
+[Acción concreta inmediata]
 ═══════════════════════════════════════════════════════════════
 
-DÍA 1 - [TÍTULO DE LA FASE]
-─────────────────────────────────
-□ [Tarea específica 1]
-□ [Tarea específica 2]
-
-DÍA 2 - [TÍTULO DE LA FASE]
-─────────────────────────────────
-□ [Tarea específica 1]
-□ [Tarea específica 2]
-
-DÍA 3 - [TÍTULO DE LA FASE]
-─────────────────────────────────
-□ [Tarea específica 1]
-□ [Tarea específica 2]
-
-═══════════════════════════════════════════════════════════════
-
-
-🚀 TU PRIMER PASO (AHORA MISMO)
-═══════════════════════════════════════════════════════════════
-
-[Acción concreta y específica que puede hacer en 30 minutos]
-
-═══════════════════════════════════════════════════════════════
-
-Usa datos REALES de la investigación. Sé específico con precios y números."""
+Usa datos REALES. Sé directo."""
 
         response = client.messages.create(
             model="claude-sonnet-4-20250514",
-            max_tokens=2500,
+            max_tokens=1200,  # ✂️ REDUCIDO de 2500
             messages=[{
                 "role": "user",
                 "content": prompt
@@ -283,7 +225,10 @@ Usa datos REALES de la investigación. Sé específico con precios y números.""
     except Exception as e:
         return None, str(e)
 
-# Interfaz principal - Formulario mejorado con 8 preguntas
+# ═══════════════════════════════════════════════════════════════
+# FORMULARIO (sin cambios - mantiene las 8 preguntas)
+# ═══════════════════════════════════════════════════════════════
+
 with st.form("analisis_form"):
     st.subheader("💡 Cuéntame sobre tu producto/servicio")
     
@@ -398,13 +343,6 @@ if submit:
     if campos_vacios:
         st.error(f"❌ Por favor completa los siguientes campos obligatorios: {', '.join(campos_vacios)}")
     else:
-        # Verificar que al menos un campo opcional esté completo
-        campos_opcionales_completos = sum([
-            bool(dedicacion),
-            bool(titulo),
-            bool(talento)
-        ])
-        
         # Preparar datos del formulario
         datos_formulario = {
             'tipo': tipo,
